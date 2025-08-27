@@ -1,6 +1,6 @@
 #ifndef matrix
 #define matrix
-
+/* This header takes a csv file as input and processes the data and stores them in 2D vector in realtime and can perform basic operations like addition multiplication and transpose */
 #include <iostream>
 #include <fstream>
 #include <sstream>
