@@ -1,6 +1,6 @@
 #ifndef matrix
 #define matrix
-/* This header takes a csv file as input and processes the data and stores them in 2D vector in realtime and can perform basic operations like addition multiplication and transpose */
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -47,7 +47,7 @@ public:
         }
     }
     Matrix(int m,int n): m(m),n(n){
-        mat.resize(m,vector<float>(n));
+        mat.resize(m,vector<float>(n,0));
     }
     Matrix(string s) {
         ifstream f(s);
@@ -140,6 +140,34 @@ public:
         cout<<m<<"  "<<n<<endl;
         return;
     }
+    static Matrix Identity(int n){
+    //n is the dimension of the identity square matrix
+    Matrix id(n,n);
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(i==j) id.mat[i][j]=1;
+            else id.mat[i][j]=0;
+        }
+    }
+    return id;     
+    }
+    static Matrix Null(int n){
+        Matrix id(n,n);
+        for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            id.mat[i][j]=0;
+        }
+    }
+    return id;
+    }
+    void scalarmul(float lambda){
+        for(auto &i:mat){
+            for(auto &j:i){
+                j*=lambda;
+            }
+        }
+    }
 };
+
 
 #endif
