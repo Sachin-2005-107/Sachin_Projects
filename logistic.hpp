@@ -1,20 +1,24 @@
 #ifndef logistics
 #define logistics
-#include <iostream>
-#include <math.h>
-#include <string>
-#include <vector>
 #include "Matrix.hpp"
+#include <math.h>
 using namespace std;
+class logistic{
 float sigmoid(float z){
     return (1/(1+exp(-z)));
 }
-void sgd(Matrix x,vector<float> y){
+public:
+float predict(Matrix weight,Matrix input,float b){
+    input=input*weight;
+    float y=sigmoid(input.M()+b);
+    if(y>0.5) return 1;
+    else return 0;
+}
+Matrix sgd(Matrix x,vector<float> y,float &b){
     Matrix theta(1,1);
-    float b=0;
-    Matrix weight(x.col(),1);
     cout<<x.row()<<endl;
-    for(int j=0;j<100;j++){
+    Matrix weight(x.col(),1);
+    for(int j=0;j<1;j++){
     for(int i=0;i<x.row();i++){
         Matrix temp=x.return_row(i);
         temp=temp*weight;
@@ -24,12 +28,17 @@ void sgd(Matrix x,vector<float> y){
         temp=x.return_row(i).transpose();
         temp.scalarmul(thet*eta);
         weight=weight-temp;
-       //b=b-(eta*thet);       
+        b=b-(eta*thet);       
     }
-}
-    cout<<b<<endl;
-    for(auto i:weight.return_col(0)) cout<<i<<" ";
-    cout<<endl;
-   
-}
+    }
+    return weight;   
+    }
+    float tester(Matrix weights,Matrix test,vector<float> y,float b){
+        float accuracy=0;
+        for(int i=0;i<test.row();i++){
+            if(y[i]==predict(weights,test.return_row(i),b)) accuracy++;
+        }
+        return (accuracy/y.size())*100;
+    }
+};
 #endif
