@@ -297,6 +297,25 @@ public:
         }
         return x;
     }
+
+    void initialise(string s){
+        fstream f;
+        f.open(s);
+        string x;
+        stringstream ss;
+        getline(f,s);
+        int row=0,col=0;
+        while(getline(f,s)){
+            ss<<s;
+            if(col==0){
+                while(getline(ss,x,',')) col++;
+            }
+            row++;
+        }
+        m=row;
+        n=col;
+        initialise_matrix(s);
+    }
 };
 
 
