@@ -31,8 +31,8 @@ class layer{
             a.resizer(n,1,0);
             b.resizer(n,1,0);
             l.resizer(n,1,0);
-            a_error.resizer(1,n,0);
-            w.resizer(n,1,0);
+            a_error.resizer(n,1,0);
+            w.resizer(n,1,0.1);
             del.resizer(1,1,0);
         }
         void activation(){
@@ -111,14 +111,13 @@ class neural{
         nn[0].del.scalarmul(error);
         nn[0].del.printdim();
          cout<<"OK"<<endl;
-     for(int i=1;i<10;i++){
+     for(int i=1;i<n;i++){
         cout<<i<<endl;
         cout<<"OK1"<<endl;
-        nn[i].del.printdim();
-        nn[i-1].w.printdim();
-        nn[i].a_error.printdim();
         nn[i].del=nn[i-1].w.transpose()*nn[i-1].del;
+       // nn[i].del=nn[i].del.transpose();
         nn[i].del=nn[i].del.habdard(nn[i].a_error);        
+        //del is completely initialised
             if(i==n-1){
                 cout<<"OK2"<<endl;
                 Matrix temp=nn[i].del * data.get_row(j);
@@ -131,8 +130,8 @@ class neural{
             else{
                 cout<<"OK3"<<endl;
                 nn[i].del.printdim();
-                nn[i-1].a.printdim();
-                Matrix temp=nn[i].del * nn[i-1].a.transpose();
+                nn[i+1].a.printdim();
+                Matrix temp=nn[i].del * nn[i+1].a.transpose();
                 cout<<"OK4"<<endl;
                 temp.scalarmul(x);
                 temp.printdim();
