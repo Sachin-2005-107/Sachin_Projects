@@ -1,322 +1,216 @@
-#ifndef matrix
-#define matrix
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <vector>
+#pragma once
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<vector>
+#include<sstream>
+#include<random>
 using namespace std;
+class Matrix{
+    private:
+        int n = 0,m = 0; //n is the no.of rows and m is the no.of columns
+        vector<vector<float>> matrix;
+        //This function reads the csv file and converts it into a matrix
+        void mat(string s){     
+            fstream f;
+            f.open(s);
+            getline(f,s); //reads and ignores the header files
+            while(getline(f,s)){
+                this->n++;
+                stringstream ss(s);
+                string t;
+                vector<float> temp;
+                if(this->m==0){
+                while(getline(ss,t,',')){
+                     this->m++;                    
+                    temp.push_back(stof(t));
+                }
+                matrix.push_back(temp);    }
+                else{
+                    while(getline(ss,t,',')){
+                                  
+                    temp.push_back(stof(t));
+                }
+                this->matrix.push_back(temp);
+                }          
 
-class Matrix {
-    int m, n; // m = rows, n = columns
-    
-    void print_matrix() {
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                cout << mat[i][j] << " ";
             }
-            cout << endl;
+            f.close();
         }
-    }
-    void initialise_matrix(string s) {
-        ifstream f(s);
-        string t, v;
-        getline(f, t); // skip header row
-
-        for (int i = 0; i < m; i++) {
-            if (getline(f, t)) {
-                stringstream ss(t);
-                for (int j = 0; j < n; j++) {
-                    if (getline(ss, v, ',')) {
-                        mat[i][j] = static_cast<float>(stof(v));
-                    }
+    public:
+    //All the constructors 
+        //This constructor takes in two integers as input
+        Matrix (int n, int m){
+            this->n=n;
+            this->m=m;
+            this->matrix.resize(n,vector<float>(m,0.0));
+        }
+        //This constructor takes in the dimensions of the matrix and the default value
+        Matrix (int n, int m , float lamda){
+            this->n=n;
+            this->m=m;
+            this->matrix.resize(n,vector<float>(m,lamda));
+        }
+        //This constructor takes the path to a csv file as input and processes it into a matrix
+        Matrix(string s){
+            mat(s);
+        }
+        Matrix (){
+            //cout<<"Empty constructor"<<endl;
+        }
+        //This function creates a random variable filled weights matrix
+        void weights_init(){
+            random_device rd;
+            mt19937 engine(rd());
+            uniform_real_distribution<double> u(-1,1);
+          //  cout<<n<<" "<<matrix.size()<<endl;
+           // cout<<m<<" "<<matrix[0].size();
+            for(int i=0;i<n;i++){
+                for(int j=0;j<m;j++){
+                    this->matrix[i][j]= u(engine);
                 }
             }
         }
-        cout << "The matrix has been initialised." << endl;
-    }
-
-public:
-    vector<vector<float>> mat;
-    
-    Matrix(int m,int n): m(m),n(n){
-
-        mat.resize(m,vector<float>(n,0));
-
-    }
-
-    Matrix(int m, int n , int x): m(m), n(n){
-
-        mat.resize(m , vector<float> (n , x));
-
-    }
-    Matrix(string s) {
-        ifstream f(s);
-        if (!f.is_open()) {
-            cerr << "Error opening file." << endl;
-            return;
+        //This functions helps us to resize the existing matrix to the given input dimensions
+        void resizer(int n,int m){
+            this->matrix.clear();
+            this->n=n;
+            this->m=m;
+            for(int i=0;i<n;i++)
+            matrix.push_back(vector<float>(m,0));
+           // cout<<n<<" "<<matrix.size()<<endl;
+           // cout<<m<<" "<<matrix[0].size()<<endl;
         }
-
-        string t, v;
-        int cols = 0, rows = 0;
-
-        if (getline(f, t)) { // header
-            stringstream ss(t);
-            while (getline(ss, v, ',')) cols++;
-        }
-
-        while (getline(f, t)) rows++;
-
-        m = rows;
-        n = cols;
-        mat.resize(m, vector<float>(n, 0));
-
-        cout << m << " rows, " << n << " columns" << endl;
-
-        f.close();
-        initialise_matrix(s);
-    }
-    Matrix(){
-        this->m=0;
-        this->n=0;
-    }
-    friend Matrix operator +(Matrix mat1 ,Matrix mat2){
-
-         if(mat1.m==mat2.m && mat1.n==mat2.n) {
-        
-            cout<<"They are compatible for addition"<<endl;
-        
-            Matrix m(mat1.m,mat1.n);
-        
-            for(int i=0;i<mat1.mat.size();i++){
-           
-                for(int j=0;j<mat1.mat[0].size();j++){
-               
-                    m.mat[i][j]=mat1.mat[i][j]+mat2.mat[i][j];
-
+    //From now on we can go into the matrix operations
+        Matrix transpose(){
+            Matrix temp(this->m,this->n);
+            for(int i=0;i<this->n;i++){
+                for(int j=0;j<this->m;j++){
+                    temp.matrix[j][i]=this->matrix[i][j];
+                }
             }
-
+            return temp;
+        }
+        Matrix scalarmul(float lamda){
+            Matrix temp(this->n,this->m);
+            for(int i=0;i<this->n;i++){
+                for(int j=0;j<this->m;j++){
+                    temp.matrix[i][j] = this->matrix[i][j] * lamda;
+                }
+            }
+            return temp;
         }
 
-        return m;
-
-        }
-
-        else {
-
-        cout<<"The matrices are not compatible for subtraction"<<endl;
-
-        return Matrix(0,0);
-
-        }
-    }
-    friend Matrix operator -(Matrix mat1 ,Matrix mat2){
-         if(mat1.m==mat2.m && mat1.n==mat2.n) {
-         cout<<"They are compatible for addition"<<endl;
-            Matrix m(mat1.m,mat1.n);
-        for(int i=0;i<mat1.mat.size();i++){
-            for(int j=0;j<mat1.mat[0].size();j++){
-                m.mat[i][j]=mat1.mat[i][j]- mat2.mat[i][j];
+        friend Matrix operator+(Matrix a,Matrix b){
+            if(a.n==b.n && a.m==b.m){
+                Matrix temp(a.n,a.m,0.0);
+                for(int i=0;i<a.n;i++){
+                    for(int j=0;j<a.m;j++){
+                        temp.matrix[i][j] = (a.matrix[i][j] + b.matrix[i][j]);
+                    }
+                }
+                return temp;
+            }
+            else{
+                cout<<"The matrices are not compatible for addition"<<endl;
+                return Matrix(1,1,0);
             }
         }
-        return m;
+        friend Matrix operator-(Matrix a,Matrix b){
+            if(a.n==b.n && a.m==b.m){
+                Matrix temp(a.n,a.m,0.0);
+                for(int i=0;i<a.n;i++){
+                    for(int j=0;j<a.m;j++){
+                        temp.matrix[i][j] = (a.matrix[i][j] - b.matrix[i][j]);
+                    }
+                }
+                return temp;
+            }
+            else{
+                cout<<"The matrices are not compatible for subtraction"<<endl;
+                return Matrix(1,1,0);
+            }
         }
-        else {
-        cout<<"The matrices are not compatible for subtraction"<<endl;
-        return Matrix(0,0);
-        }
-    }
-    friend Matrix operator *(Matrix mat1,Matrix mat2){
-            if(mat1.n==mat2.m){
-              //  cout<<"Both the Matrices are compatible for multiplication"<<endl;
-                Matrix prod(mat1.m,mat2.n);
-                for(int i=0;i<prod.m;i++){
-                    for(int j=0;j<prod.n;j++){
-                        prod.mat[i][j]=0;
-                        for(int k=0;k<mat1.n;k++){
-                            prod.mat[i][j]+=mat1.mat[i][k]*mat2.mat[k][j];
+        
+        friend Matrix operator*(Matrix a,Matrix b){
+            if(a.m == b.n){
+                Matrix temp(a.n,b.m);
+                for(int i = 0; i<a.n ; i++){
+                    for(int j = 0; j < b.m; j++){
+                        for(int k=0;k<b.n;k++){
+                            temp.matrix[i][j]+= (a.matrix[i][k] * b.matrix[k][j]);
                         }
                     }
                 }
-                return prod;
+                return temp;
             }
             else{
                 cout<<"The matrices are not compatible for multiplication"<<endl;
-                return Matrix(0,0);
+                return Matrix(1,1,0.0);
             }
-      }
-    Matrix transpose(){
-
-        Matrix trans(this->n,this->m);
-
-        for(int i=0;i<this->m;i++){
-
-            for(int j=0;j<this->n;j++){
-
-                trans.mat[j][i]=this->mat[i][j];
-
-            }
-
         }
-
-       // cout<<"The transpose has been created"<<endl;
-
-        return trans;
-    }
-
-    void printdim(){
-
-        cout<<m<<"  "<<n<<endl;
-
-        return;
-
-    }
-    static Matrix Identity(int n){
-    //n is the dimension of the identity square matrix
-    Matrix id(n,n);
-
-    for(int i=0;i<n;i++){
-
-        for(int j=0;j<n;j++){
-
-            if(i==j) id.mat[i][j]=1;
-
-            else id.mat[i][j]=0;
-
-        }
-    }
-
-    return id;     
-    }
-
-    static Matrix Null(int n){
-
-        Matrix id(n,n);
-
-        for(int i=0;i<n;i++){
-        
-            for(int j=0;j<n;j++){
-           
-                id.mat[i][j]=0;
-        
-            }
-  
-        }
-
-    return id;
-
-    }
-    void scalarmul(float lambda){
-
-        for(auto &i:mat){
-           
-            for(auto &j:i){
-             
-                j*=lambda;
-
-            }
-
-        }
-    }
-    void resizer(int m , int n , float lambda){
-
-        this->mat.resize(m , vector<float>(n , lambda));
-
-        this->n=n;
-        
-        this->m=m;
-        
-        return;
-    }
-
-    Matrix habdard(Matrix a){
-
-        if(a.m==this->m && a.n==this->n){
-
-            Matrix x(m,n);
-
-            for(int i=0;i<m;i++){
-
-                for(int j=0;j<n;j++){
-
-                    x.mat[i][j]=this->mat[i][j] * a.mat[i][j];
+        Matrix hadamard(Matrix a){
+            if(this->n == a.n && this->m == a.m){
+                Matrix temp(this->n,this->m);
+                for(int i=0;i<this->n;i++){
+                    for(int j=0;j<this->m;j++){
+                        temp.matrix[i][j] = this->matrix[i][j] * a.matrix[i][j];
+                    }
                 }
+                return temp;
+            }
+            else{
+                cout<<"Not compatible for hadamard product"<<endl;
+                return Matrix(1,1,0);
             }
         }
-        else{
-            cout<<"The matrices are not compatible for elementwise operation"<<endl;
-            return Matrix(0,0);
-        }
-
-    }
-
-    static Matrix ones(int m, int n){
-
-        return Matrix(m,n,1);
-
-
-    }
-
-    float get_element(int i , int j){
-
-        return mat[i][j];
-
-    }
-    Matrix get_row(int i){
-        Matrix ma(1,this->n);
-        for(int j=0;j<this->n;j++){
-
-            ma.mat[0][j]=this->mat[i][j];
-
-        }
-
-        return ma;
-    }
-    Matrix get_col(int i){
-        Matrix ma(1,this->m);
-        for(int j=0;j<this->m;j++){
-
-            ma.mat[0][j]=this->mat[j][i];
-        }
-        return ma;
-    }
-
-    int row(){
-        return m;
-    }
-    int col(){
-        return n;
-    }
-    Matrix features(){
-        Matrix x(m,n);
-        for(int i=0;i<m;i++){
-            for(int j=0;j<n-1;j++){
-                x.mat[i][j]=this->mat[i][j];
+    //From now on we use get functions which returns everything as a column vector
+        Matrix get_row(int j){
+            Matrix temp (this->m , 1);
+            for(int i=0;i<this->m;i++){
+                temp.matrix[i][0] = this->matrix[j][i];
             }
+            return temp;
         }
-        return x;
-    }
-
-    void initialise(string s){
-        fstream f;
-        f.open(s);
-        string x;
-        stringstream ss;
-        getline(f,s);
-        int row=0,col=0;
-        while(getline(f,s)){
-            ss<<s;
-            if(col==0){
-                while(getline(ss,x,',')) col++;
+        Matrix get_col(int j){
+            Matrix temp(this->n,1);
+            for(int i=0;i<this->n;i++){
+                temp.matrix[i][0] = this->matrix[i][j]; 
             }
-            row++;
+            return temp;
         }
-        m=row;
-        n=col;
-        initialise_matrix(s);
-    }
+        Matrix get_features(){
+            Matrix temp(this->n,this->m - 1);
+            for(int i=0;i<this->n;i++){
+                for(int j=0;j<this->m -1;j++){
+                    temp.matrix[i][j] = this->matrix[i][j];
+                }
+              
+            }
+            return temp;
+        }
+        float get_element(int i, int j) {
+            return this->matrix[i][j];
+        }
+        void put_element(int i, int j , float lamda){
+            this-> matrix [i][j] = lamda;
+        }
+        float row(){ return n;}
+        float col(){ return m;}
+        void print(){
+            for(auto i:this->matrix){
+                for(auto j:i)
+                cout<<j<<" ";
+                cout<<endl;
+            }
+            cout<<endl;
+        }
+        void pd(){
+            cout<<n<<"  "<<m<<endl;
+        }
+        void extractor(string s){
+            mat(s);
+        }
+        
+        
 };
-
-
-#endif
