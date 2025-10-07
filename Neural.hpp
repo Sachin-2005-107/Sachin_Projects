@@ -31,18 +31,27 @@ class neural{
             float eta =0.01;
             float actual = out.get_element(j,0);
             float error = net[2].a.get_element(0,0) - actual;
-            Matrix temp = net[2].a_error.scalarmul(error);
+            Matrix temp(1,1);
+            if(net[2].s=="Leaky")
+            temp = net[2].a_error.scalarmul(error);
+            else{
+            temp.put_element(0,0,error);
+            }
+
+
             net[2].del = temp;
             net[2].gradient = temp * net[1].a.transpose();
             net[2].weights= net[2].weights - net[2].gradient.scalarmul(eta);
             net[2].b = net[2].b - net[2].del.scalarmul(eta);
 
             //I succesfully completed the error propogation in first layer now to the next layer
-            temp = net[2].weights.transpose() * net[2].del;
-            net[1].del = temp.hadamard(net[1].a_error);
-            net[1].gradient = net[1].del * net[0].a.transpose();
-            net[1].weights = net[1].weights - net[1].gradient.scalarmul(eta);
-            net[1].b = net[1].b -net[1].del.scalarmul(eta);
+            for(int i=size-2;i>0;i--){
+            temp = net[i+1].weights.transpose() * net[i+1].del;
+            net[i].del = temp.hadamard(net[i].a_error);
+            net[i].gradient = net[i].del * net[i-1].a.transpose();
+            net[i].weights = net[i].weights - net[i].gradient.scalarmul(eta);
+            net[i].b = net[i].b -net[i].del.scalarmul(eta);
+            }
             //Now to the last row
             temp = net[1].weights.transpose() * net[1].del;
             net[0].del = temp.hadamard(net[0].a_error);
@@ -52,15 +61,18 @@ class neural{
         }
     public:
         neural(int n , string s){
-            size = n; //number of layers 
+            size = n; //number of layers
             //default size is 3
             //assume that the layer is 5 3 1
-            net.push_back(Layer(5));
-            net.push_back(Layer(3));
-            net.push_back(Layer(1));
+            net.push_back(Layer(5,"Leaky"));
+            net.push_back(Layer(3,"Leaky"));
+            net.push_back(Layer(1,"Leaky"));
             data.extractor(s);
             out = data.get_col(10);
             data = data.get_features();
+            data.standardize();
+
+
         }
         void printer(){
            // data.print();
@@ -74,11 +86,21 @@ class neural{
         //Now we are going to do  propogation
         void propogation(){
             int n = data.row();
-            //cout<<n<<endl;
+            cout<<n<<endl;
+
             for(int i=0;i<n;i++){
                 forward(i);
                 back(i);
+                if (i==1) {
+                    net[2].printweights();
+                    net[1].printweights();
+                    net[0].printweights();
+                }
+
             }
+
+            net[2].a.print();
+
             // for(auto i : net){
             //     i.a.print();
             //     i.errorprints();
@@ -88,21 +110,31 @@ class neural{
         //Now to take on the biggest challenge i have ever faced till now
         void predict(string s){
             test.extractor(s);
+           //
             trial = test.get_col(10);
             test = test.get_features();
+            test.standardize();
             float error = 0;
-            //trial.print();
-            for(int i = 0; i < test.row(); i++){
-                forward_test(i);
-                float temp;
-                if(net[2].a.get_element(0,0) > 0) temp = 1;
-                else temp = 0;
-                
-                if(trial.get_element(i,0) != temp) error++;
-                
-            }
-            cout<<test.row()<<endl;
-            cout<<error * 100 /test.row()<<endl;
+           // trial.print();
+             for(int i = 0; i < 100; i++){
+                 forward_test(i);
+                 float temp;
+                 //cout<<net[2].a.get_element(0,0)<<" "<<trial.get_element(i,0)<<endl;
+                 if(net[2].a.get_element(0,0) > 0.5) temp = 1;
+                 else temp = 0;
+
+                 if(trial.get_element(i,0) != temp) error++;
+
+             }
+            //cout<<net[2].a.get_element(0,0)<<endl;
+             cout<<test.row()<<endl;
+             cout<<error * 100 /100<<endl;
+            net[2].printweights();
+            net[1].printweights();
+            net[0].printweights();
         }
+    // void consolidation() {
+    //         for
+    //     }
 
 };
