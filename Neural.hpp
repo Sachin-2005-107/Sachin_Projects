@@ -32,25 +32,21 @@ class neural{
             float actual = out.get_element(j,0);
             float error = net[2].a.get_element(0,0) - actual;
             Matrix temp(1,1);
-            if(net[2].s=="Leaky")
-            temp = net[2].a_error.scalarmul(error);
-            else{
-            temp.put_element(0,0,error);
-            }
 
+            temp.put_element(0,0,error);
 
             net[2].del = temp;
-            net[2].gradient = temp * net[1].a.transpose();
+            net[2].gradient = net[2].del * net[1].a.transpose();
             net[2].weights= net[2].weights - net[2].gradient.scalarmul(eta);
             net[2].b = net[2].b - net[2].del.scalarmul(eta);
 
-            //I succesfully completed the error propogation in first layer now to the next layer
             for(int i=size-2;i>0;i--){
             temp = net[i+1].weights.transpose() * net[i+1].del;
             net[i].del = temp.hadamard(net[i].a_error);
             net[i].gradient = net[i].del * net[i-1].a.transpose();
             net[i].weights = net[i].weights - net[i].gradient.scalarmul(eta);
             net[i].b = net[i].b -net[i].del.scalarmul(eta);
+
             }
             //Now to the last row
             temp = net[1].weights.transpose() * net[1].del;
@@ -58,6 +54,7 @@ class neural{
             net[0].gradient = net[0].del * data.get_row(j).transpose();
             net[0].weights = net[0].weights - net[0].gradient.scalarmul(eta);
             net[0].b = net[0].b - net[0].del.scalarmul(eta);
+
         }
     public:
         neural(int n , string s){
@@ -66,75 +63,61 @@ class neural{
             //assume that the layer is 5 3 1
             net.push_back(Layer(5,"Leaky"));
             net.push_back(Layer(3,"Leaky"));
-            net.push_back(Layer(1,"Leaky"));
+            net.push_back(Layer(1,"Sigmoid"));
             data.extractor(s);
-            out = data.get_col(10);
+            out = data.get_col(29);
             data = data.get_features();
             data.standardize();
 
 
         }
         void printer(){
-           // data.print();
-            //out.print();
+           
             for(auto i:net){
                 i.a.print();
                 i.printweights();
 
             }
         }
-        //Now we are going to do  propogation
-        void propogation(){
+        
+        void propogation() {
             int n = data.row();
             cout<<n<<endl;
 
             for(int i=0;i<n;i++){
                 forward(i);
                 back(i);
-                if (i==1) {
-                    net[2].printweights();
-                    net[1].printweights();
-                    net[0].printweights();
+                if (isnan(net[2].weights.get_element(0,0) )) {
+                    cout<<i<<"A not a number has been encountered"<<endl;
+                    break;
                 }
 
             }
-
-            net[2].a.print();
-
-            // for(auto i : net){
-            //     i.a.print();
-            //     i.errorprints();
-            // }
         }
-        //At this point I am very happy that the forward propogation was successful
-        //Now to take on the biggest challenge i have ever faced till now
+        
         void predict(string s){
             test.extractor(s);
-           //
-            trial = test.get_col(10);
+           
+            trial = test.get_col(29);
             test = test.get_features();
             test.standardize();
             float error = 0;
-           // trial.print();
-             for(int i = 0; i < 100; i++){
+           
+             for(int i = 0; i < test.row(); i++){
                  forward_test(i);
                  float temp;
-                 //cout<<net[2].a.get_element(0,0)<<" "<<trial.get_element(i,0)<<endl;
+                 
                  if(net[2].a.get_element(0,0) > 0.5) temp = 1;
                  else temp = 0;
 
                  if(trial.get_element(i,0) != temp) error++;
 
              }
-            //cout<<net[2].a.get_element(0,0)<<endl;
+             cout<<net[2].a.get_element(0,0)<<endl;
              cout<<test.row()<<endl;
-             cout<<error * 100 /100<<endl;
-            net[2].printweights();
-            net[1].printweights();
-            net[0].printweights();
+             cout<<error * 100 /test.row()<<endl;
+
         }
-    // void consolidation() {
-    //         for
-    //     }
+
 
 };
