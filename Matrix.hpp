@@ -5,6 +5,7 @@
 #include<vector>
 #include<sstream>
 #include<random>
+#include<math.h>
 using namespace std;
 
 class Matrix {
@@ -67,8 +68,6 @@ public:
         random_device rd;
         mt19937 engine(rd());
         uniform_real_distribution<double> u(-0.01, .01);
-        //  cout<<n<<" "<<matrix.size()<<endl;
-        // cout<<m<<" "<<matrix[0].size();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 this->matrix[i][j] = u(engine);
@@ -83,8 +82,7 @@ public:
         this->m = m;
         for (int i = 0; i < n; i++)
             matrix.push_back(vector<float>(m, 0));
-        // cout<<n<<" "<<matrix.size()<<endl;
-        // cout<<m<<" "<<matrix[0].size()<<endl;
+
     }
 
     //From now on we can go into the matrix operations
@@ -97,7 +95,7 @@ public:
         }
         return temp;
     }
-
+    //This function returns a matrix where each element is a product of a scalar lamda and the current matrix elements
     Matrix scalarmul(float lamda) {
         Matrix temp(this->n, this->m);
         for (int i = 0; i < this->n; i++) {
@@ -107,7 +105,7 @@ public:
         }
         return temp;
     }
-
+    //"+' as an overloaded operator for addition of matrices
     friend Matrix operator+(Matrix a, Matrix b) {
         if (a.n == b.n && a.m == b.m) {
             Matrix temp(a.n, a.m, 0.0);
@@ -117,12 +115,13 @@ public:
                 }
             }
             return temp;
-        } else {
+        }
+        else {
             cout << "The matrices are not compatible for addition" << endl;
             return Matrix(1, 1, 0);
         }
     }
-
+    //"-" as an overloaded operator for subtraction of matrices
     friend Matrix operator-(Matrix a, Matrix b) {
         if (a.n == b.n && a.m == b.m) {
             Matrix temp(a.n, a.m, 0.0);
@@ -132,12 +131,13 @@ public:
                 }
             }
             return temp;
-        } else {
+        }
+        else {
             cout << "The matrices are not compatible for subtraction" << endl;
             return Matrix(1, 1, 0);
         }
     }
-
+    //"*" as an overloaded operator for multiplication of matrices
     friend Matrix operator*(Matrix a, Matrix b) {
         if (a.m == b.n) {
             Matrix temp(a.n, b.m);
@@ -149,12 +149,13 @@ public:
                 }
             }
             return temp;
-        } else {
+        }
+        else {
             cout << "The matrices are not compatible for multiplication" << endl;
             return Matrix(1, 1, 0.0);
         }
     }
-
+    //A function which returns hadamard or product wise element of matrices
     Matrix hadamard(Matrix a) {
         if (this->n == a.n && this->m == a.m) {
             Matrix temp(this->n, this->m);
@@ -164,13 +165,14 @@ public:
                 }
             }
             return temp;
-        } else {
+        }
+        else {
             cout << "Not compatible for hadamard product" << endl;
             return Matrix(1, 1, 0);
         }
     }
 
-    //From now on we use get functions which returns everything as a column vector
+    //From now on we use get row functions which returns a row in the matrix as a column vector
     Matrix get_row(int j) {
         Matrix temp(this->m, 1);
         for (int i = 0; i < this->m; i++) {
@@ -178,7 +180,7 @@ public:
         }
         return temp;
     }
-
+    //From now on we use get col functions which returns a column in the matrix as a column vector
     Matrix get_col(int j) {
         Matrix temp(this->n, 1);
         for (int i = 0; i < this->n; i++) {
@@ -186,7 +188,7 @@ public:
         }
         return temp;
     }
-
+    //This function returns a matrix which removes the output column and returns multiple features of the dataset
     Matrix get_features() {
         Matrix temp(this->n, this->m - 1);
         for (int i = 0; i < this->n; i++) {
@@ -196,18 +198,19 @@ public:
         }
         return temp;
     }
-
+    // This function returns an element at the given positions
     float get_element(int i, int j) {
         return this->matrix[i][j];
     }
-
+    // This function inserts an element at the given positions
     void put_element(int i, int j, float lamda) {
         this->matrix[i][j] = lamda;
     }
-
+    // This function returns the no.of rows in a matirx
     float row() { return n; }
+    // This function returns the no.of columns in a matrix
     float col() { return m; }
-
+    // This function prints all the elements in a matrix
     void print() {
         for (auto i: this->matrix) {
             for (auto j: i)
@@ -216,16 +219,16 @@ public:
         }
         cout << endl;
     }
-
+    // This function prints the dimensions as rows vs columns
     void pd() {
         cout << n << "  " << m << endl;
     }
-
+    // This function creates a matrix with a path to the csv file which is a public
     void extractor(string s) {
         mat(s);
     }
+    // This function standardizes the input dataset such that the range lies between 0 and 1
     void standardize() {
-
 
         vector<float> means(this->m, 0.0f);
         vector<float> std_devs(this->m, 0.0f);
@@ -259,16 +262,29 @@ public:
             }
         }
     }
-void HE_init(int fanin) {
+    // This function helps in initialising the Rectified Linear with HE initialisation
+    void HE_init(int fanin) {
         random_device rd;
         mt19937 engine(rd());
-        cout<<"Fanin"<<fanin<<endl;
+
         double stddev = sqrt(2.0/fanin);
-        cout<<"StdDev"<<stddev<<endl;
+
         normal_distribution<double> u(0.0,stddev);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
+                this->matrix[i][j] = u(engine);
+            }
+        }
+    }
+    // This function initialises the weights using Xavier/Glorot Initalization for Sigmoid Activation
+    void Xavier_init(int fanin, int  fanout) {
+        random_device rd;
+        mt19937 engine(rd());
+        double stddev = sqrt(2.0/(fanin+fanout));
+        normal_distribution<double> u(0.0,stddev);
+        for (int i=0;i<n;i++) {
+            for (int j=0;j<m;j++) {
                 this->matrix[i][j] = u(engine);
             }
         }
